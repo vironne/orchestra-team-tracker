@@ -8,11 +8,16 @@ import { TASK_PRIORITY, type TaskPriorityKey, type TaskStatusKey } from "@/lib/c
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { TaskFormDialog } from "@/components/forms/task-form";
+import { EditTaskDialog } from "@/components/forms/edit-task-form";
 import { TaskStatusToggle } from "@/components/task-status-toggle";
 import { PriorityDot } from "@/components/priority-dot";
 import { MemberAvatar } from "@/components/member-avatar";
 import { ProjectContext } from "@/components/project-context";
 import { DeleteTaskButton } from "@/components/delete-task-button";
+
+type CategoryOption = { id: string; name: string; emoji: string };
+type MemberOption = { id: string; name: string };
+type ProjectOption = { id: string; name: string; clientName: string };
 
 export default async function TasksPage() {
   let tasks: Awaited<ReturnType<typeof getTasks>> = [];
@@ -31,13 +36,13 @@ export default async function TasksPage() {
     // DB not connected
   }
 
-  const categoryOptions = categories.map((c) => ({
+  const categoryOptions: CategoryOption[] = categories.map((c) => ({
     id: c.id,
     name: c.name,
     emoji: c.emoji,
   }));
-  const memberOptions = members.map((m) => ({ id: m.id, name: m.name }));
-  const projectOptions = projects.map((p) => ({
+  const memberOptions: MemberOption[] = members.map((m) => ({ id: m.id, name: m.name }));
+  const projectOptions: ProjectOption[] = projects.map((p) => ({
     id: p.id,
     name: p.name,
     clientName: p.client.name,
@@ -49,34 +54,18 @@ export default async function TasksPage() {
     tasks: tasks.filter((t) => t.categoryId === cat.id),
   }));
 
-  // Tasks without a matching category (shouldn't happen but safe)
   const categoryIds = new Set(categories.map((c) => c.id));
   const uncategorized = tasks.filter((t) => !categoryIds.has(t.categoryId));
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Toutes les tâches"
-        description="Organisées par catégorie"
-      >
-        <TaskFormDialog
-          categories={categoryOptions}
-          members={memberOptions}
-          projects={projectOptions}
-        />
+      <PageHeader title="Toutes les tâches" description="Organisées par catégorie">
+        <TaskFormDialog categories={categoryOptions} members={memberOptions} projects={projectOptions} />
       </PageHeader>
 
       {tasks.length === 0 ? (
-        <EmptyState
-          icon="📋"
-          title="Aucune tâche"
-          description="Créez votre première tâche pour organiser le travail de l'équipe."
-        >
-          <TaskFormDialog
-            categories={categoryOptions}
-            members={memberOptions}
-            projects={projectOptions}
-          />
+        <EmptyState icon="📋" title="Aucune tâche" description="Créez votre première tâche pour organiser le travail de l'équipe.">
+          <TaskFormDialog categories={categoryOptions} members={memberOptions} projects={projectOptions} />
         </EmptyState>
       ) : (
         <div className="space-y-6">
@@ -89,16 +78,14 @@ export default async function TasksPage() {
                 name={group.category.name}
                 color={group.category.color}
                 tasks={group.tasks}
+                categories={categoryOptions}
+                members={memberOptions}
+                projects={projectOptions}
               />
             ))}
 
           {uncategorized.length > 0 && (
-            <TaskGroup
-              emoji="❓"
-              name="Sans catégorie"
-              color="gray"
-              tasks={uncategorized}
-            />
+            <TaskGroup emoji="❓" name="Sans catégorie" color="gray" tasks={uncategorized} categories={categoryOptions} members={memberOptions} projects={projectOptions} />
           )}
         </div>
       )}
@@ -115,11 +102,17 @@ function TaskGroup({
   name,
   color,
   tasks,
+  categories,
+  members,
+  projects,
 }: {
   emoji: string;
   name: string;
   color: string;
   tasks: TaskWithRelations[];
+  categories: CategoryOption[];
+  members: MemberOption[];
+  projects: ProjectOption[];
 }) {
   const colorAccents: Record<string, string> = {
     green: "border-emerald-800/50",
@@ -138,30 +131,33 @@ function TaskGroup({
         {name}
         <span className="text-zinc-600">({tasks.length})</span>
       </h2>
-      <div
-        className={`rounded-lg border ${colorAccents[color] ?? colorAccents.gray} divide-y divide-zinc-800/50`}
-      >
+      <div className={`rounded-lg border ${colorAccents[color] ?? colorAccents.gray} divide-y divide-zinc-800/50`}>
         {tasks.map((task) => (
-          <TaskRow key={task.id} task={task} />
+          <TaskRow key={task.id} task={task} categories={categories} members={members} projects={projects} />
         ))}
       </div>
     </div>
   );
 }
 
-function TaskRow({ task }: { task: TaskWithRelations }) {
+function TaskRow({
+  task,
+  categories,
+  members,
+  projects,
+}: {
+  task: TaskWithRelations;
+  categories: CategoryOption[];
+  members: MemberOption[];
+  projects: ProjectOption[];
+}) {
   const priorityConfig = TASK_PRIORITY[task.priority as TaskPriorityKey];
 
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-900/50 transition-colors">
-      <TaskStatusToggle
-        taskId={task.id}
-        status={task.status as TaskStatusKey}
-      />
+      <TaskStatusToggle taskId={task.id} status={task.status as TaskStatusKey} />
 
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-        {task.title}
-      </span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{task.title}</span>
 
       <ProjectContext project={task.project} />
 
@@ -173,12 +169,26 @@ function TaskRow({ task }: { task: TaskWithRelations }) {
 
       {task.dueDate && (
         <span className="shrink-0 text-xs text-muted-foreground">
-          {new Date(task.dueDate).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "short",
-          })}
+          {new Date(task.dueDate).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
         </span>
       )}
+
+      <EditTaskDialog
+        task={{
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          categoryId: task.categoryId,
+          assigneeId: task.assigneeId,
+          projectId: task.projectId,
+          dueDate: task.dueDate,
+        }}
+        categories={categories}
+        members={members}
+        projects={projects}
+      />
 
       <DeleteTaskButton taskId={task.id} taskTitle={task.title} />
     </div>

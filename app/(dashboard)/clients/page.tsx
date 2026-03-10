@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Users } from "lucide-react";
 import { DeleteClientButton } from "@/components/delete-client-button";
+import { EditClientDialog } from "@/components/forms/edit-client-form";
 
 type ContactInfo = {
   name: string;
@@ -116,10 +117,21 @@ export default async function ClientsPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <DeleteClientButton
-                        clientId={client.id}
-                        clientName={client.name}
-                      />
+                      <div className="flex items-center gap-1">
+                        <EditClientDialog
+                          client={{
+                            id: client.id,
+                            name: client.name,
+                            company: client.company,
+                            contacts: client.contacts,
+                            notes: client.notes,
+                          }}
+                        />
+                        <DeleteClientButton
+                          clientId={client.id}
+                          clientName={client.name}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteProjectButton } from "@/components/delete-project-button";
+import { EditProjectDialog } from "@/components/forms/edit-project-form";
 
 export default async function ProjectsPage({
   searchParams,
@@ -130,10 +131,26 @@ export default async function ProjectsPage({
                       )}
                     </TableCell>
                     <TableCell>
-                      <DeleteProjectButton
-                        projectId={project.id}
-                        projectName={project.name}
-                      />
+                      <div className="flex items-center gap-1">
+                        <EditProjectDialog
+                          project={{
+                            id: project.id,
+                            name: project.name,
+                            clientId: project.clientId,
+                            status: project.status,
+                            budget: project.budget ? Number(project.budget) : null,
+                            monthlyCost: project.monthlyCost ? Number(project.monthlyCost) : null,
+                            annualCost: project.annualCost ? Number(project.annualCost) : null,
+                            dueDate: project.dueDate,
+                            notes: project.notes,
+                          }}
+                          clients={clientOptions}
+                        />
+                        <DeleteProjectButton
+                          projectId={project.id}
+                          projectName={project.name}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

@@ -17,6 +17,7 @@ import { PriorityDot } from "@/components/priority-dot";
 import { ProjectContext } from "@/components/project-context";
 import { CategoryBadge } from "@/components/category-badge";
 import { DeleteTaskButton } from "@/components/delete-task-button";
+import { EditTaskDialog } from "@/components/forms/edit-task-form";
 import { MyTasksOwnerSelect } from "@/components/my-tasks-owner-select";
 
 type Props = {
@@ -137,6 +138,23 @@ export default async function MyTasksPage({ searchParams }: Props) {
                         color={task.category.color}
                       />
                     )}
+
+                    <EditTaskDialog
+                      task={{
+                        id: task.id,
+                        title: task.title,
+                        description: task.description,
+                        status: task.status,
+                        priority: task.priority,
+                        categoryId: task.categoryId,
+                        assigneeId: task.assigneeId,
+                        projectId: task.projectId,
+                        dueDate: task.dueDate,
+                      }}
+                      categories={categoryOptions}
+                      members={memberOptions}
+                      projects={projectOptions}
+                    />
 
                     <DeleteTaskButton
                       taskId={task.id}

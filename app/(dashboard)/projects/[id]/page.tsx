@@ -17,6 +17,7 @@ import { MemberAvatar } from "@/components/member-avatar";
 import { EmptyState } from "@/components/empty-state";
 import { IssueFormDialog } from "@/components/forms/issue-form";
 import { IssueActions } from "@/components/issue-actions";
+import { EditIssueDialog } from "@/components/forms/edit-issue-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -274,10 +275,25 @@ export default async function ProjectDetailPage({
                           )}
                         </TableCell>
                         <TableCell>
-                          <IssueActions
-                            issueId={issue.id}
-                            currentStatus={issue.status as IssueStatusKey}
-                          />
+                          <div className="flex items-center gap-1">
+                            <EditIssueDialog
+                              issue={{
+                                id: issue.id,
+                                projectId: project.id,
+                                title: issue.title,
+                                description: issue.description,
+                                status: issue.status,
+                                priority: issue.priority,
+                                type: issue.type,
+                                assigneeId: issue.assigneeId,
+                              }}
+                              members={memberOptions}
+                            />
+                            <IssueActions
+                              issueId={issue.id}
+                              currentStatus={issue.status as IssueStatusKey}
+                            />
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
