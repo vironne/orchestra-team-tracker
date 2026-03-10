@@ -145,7 +145,7 @@ export default async function ClientDetailPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {client.projects.map((project) => {
+                {client.projects.map((project: { id: string; name: string; status: string; _count?: { tasks: number } }) => {
                   const statusConfig =
                     PROJECT_STATUS[project.status as ProjectStatusKey];
                   return (
