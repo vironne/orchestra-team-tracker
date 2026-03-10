@@ -162,7 +162,7 @@ export default async function ClientDetailPage({
                         <StatusBadge config={statusConfig} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {project._count.tasks}
+                        {project._count?.tasks ?? 0}
                       </TableCell>
                     </TableRow>
                   );
