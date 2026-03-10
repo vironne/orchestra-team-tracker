@@ -17,8 +17,15 @@ import { PriorityDot } from "@/components/priority-dot";
 import { ProjectContext } from "@/components/project-context";
 import { CategoryBadge } from "@/components/category-badge";
 import { DeleteTaskButton } from "@/components/delete-task-button";
+import { MyTasksOwnerSelect } from "@/components/my-tasks-owner-select";
 
-export default async function MyTasksPage() {
+type Props = {
+  searchParams: Promise<{ user?: string }>;
+};
+
+export default async function MyTasksPage({ searchParams }: Props) {
+  const { user: selectedUserId } = await searchParams;
+
   let allTasks: Awaited<ReturnType<typeof getTasks>> = [];
   let categories: Awaited<ReturnType<typeof getCategories>> = [];
   let members: Awaited<ReturnType<typeof getTeamMembers>> = [];
@@ -35,8 +42,11 @@ export default async function MyTasksPage() {
     // DB not connected
   }
 
-  // Hardcode first team member as "current user" (no auth yet)
-  const currentUser = members[0] ?? null;
+  // Use selected user from URL, or fallback to first member
+  const currentUser = selectedUserId
+    ? members.find((m) => m.id === selectedUserId) ?? members[0] ?? null
+    : members[0] ?? null;
+
   const myTasks = currentUser
     ? allTasks.filter((t) => t.assigneeId === currentUser.id)
     : [];
@@ -61,11 +71,21 @@ export default async function MyTasksPage() {
         }
         description="Ce que je dois faire aujourd'hui"
       >
-        <TaskFormDialog
-          categories={categoryOptions}
-          members={memberOptions}
-          projects={projectOptions}
-        />
+        <div className="flex items-center gap-3">
+          <MyTasksOwnerSelect
+            members={members.map((m) => ({
+              id: m.id,
+              name: m.name,
+              avatar: m.avatar,
+            }))}
+            currentId={currentUser?.id ?? null}
+          />
+          <TaskFormDialog
+            categories={categoryOptions}
+            members={memberOptions}
+            projects={projectOptions}
+          />
+        </div>
       </PageHeader>
 
       {!currentUser ? (
@@ -128,7 +148,7 @@ export default async function MyTasksPage() {
             </div>
           </div>
 
-          {/* My Bugs (placeholder for Phase 2) */}
+          {/* My Bugs */}
           <div>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
               🐛 MES BUGS ASSIGNÉS
