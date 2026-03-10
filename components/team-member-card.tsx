@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EditTeamMemberDialog } from "@/components/forms/edit-team-member-form";
 import { deleteTeamMember } from "@/app/actions/team";
 import { Trash2, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -28,15 +30,22 @@ export function TeamMemberCard({ member }: { member: Member }) {
   }
 
   return (
-    <Card className="border-zinc-800 bg-zinc-900/50">
+    <Card className="border-zinc-800 bg-zinc-900/50 transition-colors hover:border-zinc-700">
       <CardContent className="flex items-start gap-4 p-4">
-        <MemberAvatar
-          name={member.name}
-          avatar={member.avatar}
-          size="lg"
-        />
+        <Link href={`/settings/team/${member.id}`} className="shrink-0">
+          <MemberAvatar
+            name={member.name}
+            avatar={member.avatar}
+            size="lg"
+          />
+        </Link>
         <div className="min-w-0 flex-1">
-          <h3 className="font-medium truncate">{member.name}</h3>
+          <Link
+            href={`/settings/team/${member.id}`}
+            className="font-medium truncate block hover:underline"
+          >
+            {member.name}
+          </Link>
           {member.role && (
             <p className="text-sm text-muted-foreground">{member.role}</p>
           )}
@@ -49,14 +58,17 @@ export function TeamMemberCard({ member }: { member: Member }) {
             <span>{member._count.assignedIssues} bugs</span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 text-zinc-500 hover:text-red-400"
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex shrink-0 gap-1">
+          <EditTeamMemberDialog member={member} />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 text-zinc-500 hover:text-red-400"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
